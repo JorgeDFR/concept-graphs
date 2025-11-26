@@ -42,7 +42,7 @@ xhost +local:docker
 Open an interactive shell inside the container:
 
 ``` bash
-docker exec -it concept-graphs bash
+docker exec -it concept_graphs bash
 ```
 
 ## Run Concept-Graphs

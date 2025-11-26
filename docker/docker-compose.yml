@@ -1,0 +1,21 @@
+services:
+  concept-graphs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: concept_graphs
+    container_name: concept_graphs
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /dev/dri:/dev/dri
+      - ${HOME}/data:/home/user/data  # Folder with the datasets (replica, etc.)
+    environment:
+      - color_prompt=no
+      - DISPLAY=${DISPLAY}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    network_mode: host
+    tty: true
+    stdin_open: true
+    runtime: nvidia

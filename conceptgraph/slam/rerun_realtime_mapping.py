@@ -27,13 +27,13 @@ from collections import Counter
 
 # Local application/library specific imports
 from conceptgraph.utils.optional_rerun_wrapper import (
-    OptionalReRun, 
-    orr_log_annotated_image, 
-    orr_log_camera, 
-    orr_log_depth_image, 
-    orr_log_edges, 
-    orr_log_objs_pcd_and_bbox, 
-    orr_log_rgb_image, 
+    OptionalReRun,
+    orr_log_annotated_image,
+    orr_log_camera,
+    orr_log_depth_image,
+    orr_log_edges,
+    orr_log_objs_pcd_and_bbox,
+    orr_log_rgb_image,
     orr_log_vlm_image
 )
 from conceptgraph.utils.optional_wandb_wrapper import OptionalWandB
@@ -42,32 +42,32 @@ from conceptgraph.utils.logging_metrics import DenoisingTracker, MappingTracker
 from conceptgraph.utils.vlm import consolidate_captions, get_obj_rel_from_image_gpt4v, get_openai_client
 from conceptgraph.utils.ious import mask_subtract_contained
 from conceptgraph.utils.general_utils import (
-    ObjectClasses, 
-    find_existing_image_path, 
-    get_det_out_path, 
-    get_exp_out_path, 
-    get_vlm_annotated_image_path, 
-    handle_rerun_saving, 
-    load_saved_detections, 
-    load_saved_hydra_json_config, 
-    make_vlm_edges_and_captions, 
-    measure_time, 
+    ObjectClasses,
+    find_existing_image_path,
+    get_det_out_path,
+    get_exp_out_path,
+    get_vlm_annotated_image_path,
+    handle_rerun_saving,
+    load_saved_detections,
+    load_saved_hydra_json_config,
+    make_vlm_edges_and_captions,
+    measure_time,
     save_detection_results,
-    save_edge_json, 
+    save_edge_json,
     save_hydra_config,
-    save_obj_json, 
-    save_objects_for_frame, 
-    save_pointcloud, 
-    should_exit_early, 
+    save_obj_json,
+    save_objects_for_frame,
+    save_pointcloud,
+    should_exit_early,
     vis_render_image
 )
 from conceptgraph.dataset.datasets_common import get_dataset
 from conceptgraph.utils.vis import (
-    OnlineObjectRenderer, 
-    save_video_from_frames, 
-    vis_result_fast_on_depth, 
-    vis_result_for_vlm, 
-    vis_result_fast, 
+    OnlineObjectRenderer,
+    save_video_from_frames,
+    vis_result_fast_on_depth,
+    vis_result_for_vlm,
+    vis_result_fast,
     save_video_detections
 )
 from conceptgraph.slam.slam_classes import MapEdgeMapping, MapObjectList
@@ -78,7 +78,7 @@ from conceptgraph.slam.utils import (
     init_process_pcd,
     make_detection_list_from_pcd_and_gobs,
     denoise_objects,
-    merge_objects, 
+    merge_objects,
     detections_to_obj_pcd_and_bbox,
     prepare_objects_save_vis,
     process_cfg,
@@ -106,7 +106,7 @@ torch.set_grad_enabled(False)
 # @profile
 def main(cfg : DictConfig):
     tracker = MappingTracker()
-    
+
     orr = OptionalReRun()
     orr.set_use_rerun(cfg.use_rerun)
     orr.init("realtime_mapping")
@@ -114,7 +114,7 @@ def main(cfg : DictConfig):
 
     owandb = OptionalWandB()
     owandb.set_use_wandb(cfg.use_wandb)
-    owandb.init(project="concept-graphs", 
+    owandb.init(project="concept-graphs",
             #    entity="concept-graphs",
                 config=cfg_to_dict(cfg),
                )
@@ -143,7 +143,7 @@ def main(cfg : DictConfig):
         view_param = read_pinhole_camera_parameters(cfg.render_camera_path)
         obj_renderer = OnlineObjectRenderer(
             view_param = view_param,
-            base_objects = None, 
+            base_objects = None,
             gray_map = False,
         )
         frames = []
@@ -156,8 +156,8 @@ def main(cfg : DictConfig):
     # we need to make sure to use the same classes as the ones used in the detections
     detections_exp_cfg = cfg_to_dict(cfg)
     obj_classes = ObjectClasses(
-        classes_file_path=detections_exp_cfg['classes_file'], 
-        bg_classes=detections_exp_cfg['bg_classes'], 
+        classes_file_path=detections_exp_cfg['classes_file'],
+        bg_classes=detections_exp_cfg['bg_classes'],
         skip_bg=detections_exp_cfg['skip_bg']
     )
 
@@ -165,7 +165,7 @@ def main(cfg : DictConfig):
     run_detections = check_run_detections(cfg.force_detection, det_exp_path)
     det_exp_pkl_path = get_det_out_path(det_exp_path)
     det_exp_vis_path = get_vis_out_path(det_exp_path)
-    
+
     prev_adjusted_pose = None
 
     if run_detections:
@@ -174,8 +174,11 @@ def main(cfg : DictConfig):
 
         ## Initialize the detection models
         detection_model = measure_time(YOLO)('yolov8l-world.pt')
-        sam_predictor = SAM('sam_l.pt') # SAM('mobile_sam.pt') # UltraLytics SAM
+
+        #sam_predictor = SAM('sam_l.pt')
+        sam_predictor = SAM('mobile_sam.pt') # UltraLytics SAM
         # sam_predictor = measure_time(get_sam_predictor)(cfg) # Normal SAM
+
         clip_model, _, clip_preprocess = open_clip.create_model_and_transforms(
             "ViT-H-14", "laion2b_s32b_b79k"
         )
@@ -233,10 +236,10 @@ def main(cfg : DictConfig):
         raw_gobs = None
         gobs = None # stands for grounded observations
         detections_path = det_exp_pkl_path / (color_path.stem + ".pkl.gz")
-        
+
         vis_save_path_for_vlm = get_vlm_annotated_image_path(det_exp_vis_path, color_path)
         vis_save_path_for_vlm_edges = get_vlm_annotated_image_path(det_exp_vis_path, color_path, w_edges=True)
-        
+
         if run_detections:
             results = None
             # opencv can't read Path objects...
@@ -269,7 +272,7 @@ def main(cfg : DictConfig):
                 class_id=detection_class_ids,
                 mask=masks_np,
             )
-            
+
             # Make the edges
             labels, edges, edge_image, captions = make_vlm_edges_and_captions(image, curr_det, obj_classes, detection_class_labels, det_exp_vis_path, color_path, cfg.make_edges, openai_client)
 
@@ -282,7 +285,7 @@ def main(cfg : DictConfig):
             # Save results
             # Convert the detections to a dict. The elements are in np.array
             results = {
-                # add new uuid for each detection 
+                # add new uuid for each detection
                 "xyxy": curr_det.xyxy,
                 "confidence": curr_det.confidence,
                 "class_id": curr_det.class_id,
@@ -330,9 +333,9 @@ def main(cfg : DictConfig):
 
         # Don't apply any transformation otherwise
         adjusted_pose = unt_pose
-        
+
         prev_adjusted_pose = orr_log_camera(intrinsics, adjusted_pose, prev_adjusted_pose, cfg.image_width, cfg.image_height, frame_idx)
-        
+
         orr_log_rgb_image(color_path)
         orr_log_annotated_image(color_path, det_exp_vis_path)
         orr_log_depth_image(depth_tensor)
@@ -342,7 +345,7 @@ def main(cfg : DictConfig):
         # resize the observation if needed
         resized_gobs = resize_gobs(raw_gobs, image_rgb)
         # filter the observations
-        filtered_gobs = filter_gobs(resized_gobs, image_rgb, 
+        filtered_gobs = filter_gobs(resized_gobs, image_rgb,
             skip_bg=cfg.skip_bg,
             BG_CLASSES=obj_classes.get_bg_classes_arr(),
             mask_area_threshold=cfg.mask_area_threshold,
@@ -380,7 +383,7 @@ def main(cfg : DictConfig):
                     dbscan_min_points=cfg["dbscan_min_points"],
                 )
                 obj["bbox"] = get_bounding_box(
-                    spatial_sim_type=cfg['spatial_sim_type'], 
+                    spatial_sim_type=cfg['spatial_sim_type'],
                     pcd=obj["pcd"],
                 )
 
@@ -401,12 +404,12 @@ def main(cfg : DictConfig):
                     "total_objects_so_far": tracker.get_total_objects(),
                     "objects_this_frame": len(detection_list),
                 })
-            continue 
+            continue
 
         ### compute similarities and then merge
         spatial_sim = compute_spatial_similarities(
-            spatial_sim_type=cfg['spatial_sim_type'], 
-            detection_list=detection_list, 
+            spatial_sim_type=cfg['spatial_sim_type'],
+            detection_list=detection_list,
             objects=objects,
             downsample_voxel_size=cfg['downsample_voxel_size']
         )
@@ -414,28 +417,28 @@ def main(cfg : DictConfig):
         visual_sim = compute_visual_similarities(detection_list, objects)
 
         agg_sim = aggregate_similarities(
-            match_method=cfg['match_method'], 
-            phys_bias=cfg['phys_bias'], 
-            spatial_sim=spatial_sim, 
+            match_method=cfg['match_method'],
+            phys_bias=cfg['phys_bias'],
+            spatial_sim=spatial_sim,
             visual_sim=visual_sim
         )
 
         # Perform matching of detections to existing objects
         match_indices = match_detections_to_objects(
-            agg_sim=agg_sim, 
+            agg_sim=agg_sim,
             detection_threshold=cfg['sim_threshold']  # Use the sim_threshold from the configuration
         )
 
         # Now merge the detected objects into the existing objects based on the match indices
         objects = merge_obj_matches(
-            detection_list=detection_list, 
-            objects=objects, 
+            detection_list=detection_list,
+            objects=objects,
             match_indices=match_indices,
-            downsample_voxel_size=cfg['downsample_voxel_size'], 
-            dbscan_remove_noise=cfg['dbscan_remove_noise'], 
-            dbscan_eps=cfg['dbscan_eps'], 
-            dbscan_min_points=cfg['dbscan_min_points'], 
-            spatial_sim_type=cfg['spatial_sim_type'], 
+            downsample_voxel_size=cfg['downsample_voxel_size'],
+            dbscan_remove_noise=cfg['dbscan_remove_noise'],
+            dbscan_eps=cfg['dbscan_eps'],
+            dbscan_min_points=cfg['dbscan_min_points'],
+            spatial_sim_type=cfg['spatial_sim_type'],
             device=cfg['device']
             # Note: Removed 'match_method' and 'phys_bias' as they do not appear in the provided merge function
         )
@@ -459,7 +462,7 @@ def main(cfg : DictConfig):
         for curr_map_edge in map_edges.edges_by_index.values():
             curr_obj1_idx = curr_map_edge.obj1_idx
             curr_obj2_idx = curr_map_edge.obj2_idx
-            obj1_class_name = objects[curr_obj1_idx]['class_name'] 
+            obj1_class_name = objects[curr_obj1_idx]['class_name']
             obj2_class_name = objects[curr_obj2_idx]['class_name']
             curr_first_detected = curr_map_edge.first_detected
             curr_num_det = curr_map_edge.num_detections
@@ -477,12 +480,12 @@ def main(cfg : DictConfig):
             is_final_frame,
         ):
             objects = measure_time(denoise_objects)(
-                downsample_voxel_size=cfg['downsample_voxel_size'], 
-                dbscan_remove_noise=cfg['dbscan_remove_noise'], 
-                dbscan_eps=cfg['dbscan_eps'], 
-                dbscan_min_points=cfg['dbscan_min_points'], 
-                spatial_sim_type=cfg['spatial_sim_type'], 
-                device=cfg['device'], 
+                downsample_voxel_size=cfg['downsample_voxel_size'],
+                dbscan_remove_noise=cfg['dbscan_remove_noise'],
+                dbscan_eps=cfg['dbscan_eps'],
+                dbscan_min_points=cfg['dbscan_min_points'],
+                spatial_sim_type=cfg['spatial_sim_type'],
+                device=cfg['device'],
                 objects=objects
             )
 
@@ -494,8 +497,8 @@ def main(cfg : DictConfig):
             is_final_frame,
         ):
             objects = filter_objects(
-                obj_min_points=cfg['obj_min_points'], 
-                obj_min_detections=cfg['obj_min_detections'], 
+                obj_min_points=cfg['obj_min_points'],
+                obj_min_detections=cfg['obj_min_detections'],
                 objects=objects,
                 map_edges=map_edges
             )
@@ -549,7 +552,7 @@ def main(cfg : DictConfig):
                 adjusted_pose,
                 color_path
             )
-        
+
         if cfg.vis_render:
             # render a frame, if needed (not really used anymore since rerun)
             vis_render_image(
@@ -601,7 +604,7 @@ def main(cfg : DictConfig):
                 "is_final_frame": is_final_frame,
                 })
     # LOOP OVER -----------------------------------------------------
-    
+
     # Consolidate captions only when edges/captions are enabled
     if cfg.make_edges:
         for object in objects:
@@ -630,7 +633,7 @@ def main(cfg : DictConfig):
             exp_out_path=exp_out_path,
             objects=objects
         )
-        
+
         save_edge_json(
             exp_suffix=cfg.exp_suffix,
             exp_out_path=exp_out_path,

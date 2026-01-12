@@ -1,6 +1,6 @@
-# Concept-Graphs -- Docker Setup Guide
+# ConceptGraphs -- Docker Setup Guide
 
-This guide explains how to configure, build, and run the Concept-Graphs
+This guide explains how to configure, build, and run the ConceptGraphs
 environment using Docker and Docker Compose.
 
 ## Configure Dataset Path
@@ -9,7 +9,7 @@ Before building the container, edit
 **[`docker-compose.yml`](./docker-compose.yml)** and update the dataset
 directory mapping to point to your local dataset folder:
 
-``` yaml
+```yaml
 volumes:
   - /path/to/your/dataset:/home/user/data
 ```
@@ -20,7 +20,7 @@ Replace `/path/to/your/dataset` with the actual path on your machine.
 
 To build the image defined in the `Dockerfile`, run:
 
-``` bash
+```bash
 docker compose build
 ```
 
@@ -28,11 +28,11 @@ docker compose build
 
 Start the service in detached mode:
 
-``` bash
+```bash
 docker compose up -d
 ```
 
-> **Note:** In order to enable GUI applications (OpenCV windows, visualization tools, etc.) run the following command:
+> **Note:** In order to enable GUI applications run the following command:
 ```bash
 xhost +local:docker
 ```
@@ -41,16 +41,16 @@ xhost +local:docker
 
 Open an interactive shell inside the container:
 
-``` bash
+```bash
 docker exec -it concept_graphs bash
 ```
 
-## Run Concept-Graphs
+## Run ConceptGraphs
 
 Inside the container, run:
 
-``` bash
+```bash
 ./run_concept-graphs.sh
 ```
 
-This will start the Concept-Graphs pipeline, considering the Replica dataset (same one used in the main documentation)
+This will start the ConceptGraphs pipeline, considering the Replica dataset (same one used in the main documentation).

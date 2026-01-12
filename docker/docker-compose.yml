@@ -10,6 +10,7 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /dev/dri:/dev/dri
       - ${HOME}/data:/home/user/data  # Folder with the datasets (replica, etc.)
+      #- ${HOME}/devel/3dsg_devel/concept-graphs:/home/user/workspace/concept-graphs  # devel
     environment:
       - color_prompt=no
       - DISPLAY=${DISPLAY}

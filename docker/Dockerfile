@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 \
     --index-url https://download.pytorch.org/whl/cu128
 
-# Install FAISS CPU (maybe check with mkl and blas later)
+# Install FAISS (CPU version)
 RUN pip install faiss-cpu
 
 # Install PyTorch3D dependencies
@@ -28,13 +28,13 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev libpng-dev cmake && \
     rm -rf /var/lib/apt/lists/*
 
-# Install PyTorch3D permanently
+# Install PyTorch3D
 RUN git clone https://github.com/facebookresearch/pytorch3d.git /tmp/pytorch3d && \
     cd /tmp/pytorch3d && \
     pip install . && \
     rm -rf /tmp/pytorch3d
 
-# Other Python packages
+# Install other Python packages
 RUN pip install \
     tyro open_clip_torch wandb h5py openai hydra-core distinctipy ultralytics \
     dill open3d imageio natsort kornia rerun-sdk pyliblzfse pypng supervision \

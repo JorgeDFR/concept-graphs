@@ -3,5 +3,5 @@ defaults:
 
 dataset_root: ${data_root}/rosbags
 dataset_config: ${repo_root}/conceptgraph/dataset/dataconfigs/dataset_custom/config.yaml
-scene_id: replica_apt2_robot1
+scene_id: webots_ugv_rover
 render_camera_path: ${repo_root}/conceptgraph/dataset/dataconfigs/dataset_custom/camera_render.json
